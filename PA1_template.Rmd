@@ -7,19 +7,165 @@ output:
 
 
 ## Loading and preprocessing the data
+```{r}
+library(sqldf)
+library(ggplot2)
+library(Hmisc)
+library(rmarkdown)
 
+setwd("C:/Users/rcoleman/Documents/GitHub/Coursera/Reproducible-Research/RepData_PeerAssessment1")
 
+df <- read.csv("activity.csv")
 
+head(df)
+```
 ## What is mean total number of steps taken per day?
+### Transform the Data
+```{r}
+dfTemp <- sqldf("
+select date
+  ,sum(steps) as total_steps
+from df
+group by 1
+")
 
+head(dfTemp)
+```
+### Histogram of Total Number of Steps by Day
+```{r,echo=FALSE}
+ggplot(data=df,aes(x=date,y=steps)) +
+  geom_histogram(stat="identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+### Mean and Median
+```{r}
+dfAggregate <- sqldf("
+select avg(total_steps) as mean_steps
+  ,median(total_steps) as median_steps
+from dfTemp")
 
-
+dfAggregate
+```
 ## What is the average daily activity pattern?
+### Transform the Data
+```{r}
+dfTemp <- sqldf("
+select interval
+  ,avg(steps) as avg_steps
+from df
+group by 1")
 
+index <- which.max(dfTemp$avg_steps)
 
-
+head(dfTemp)
+```
+### Interval with Maximum Value
+```{r}
+dfTemp[104,]
+```
+### Time Series Plot of Average Steps by Interval
+```{r,echo=FALSE}
+ggplot(data=dfTemp,aes(x=interval,y=avg_steps)) +
+  geom_line()
+```
 ## Imputing missing values
+Lets first get some summary statistics on our dataframe to doublecheck our work.
+```{r}
+summary(df)
+describe(df)
+```
+We can see that there are 2304 missing values in the summary statistics. Lets double check this number through our own computation
+```{r}
+dfMissing <- sqldf("
+select count(*)
+from df
+where steps is null")
 
+dfMissing
+```
+### Fill in the missing values
+Now that we know the magnitude of missing values in our dataset we can construct a method to fill in these missing values. I chose to fill in the null values with the mean value for that interval
+#### Mean Steps by Interval
+```{r}
+dfIntervalMean <- sqldf("
+select interval
+  ,avg(steps) as avg_steps
+from df
+group by 1")
 
+head(dfIntervalMean)
+```
+Now that we have the mean steps by interval we can go about filling in the missing values. I have chosen to loop through each row in the dataframe but this can be vectorized for an improvement in speed.
+```{r}
+dfTemp <- df
 
+for(i in 1:nrow(dfTemp)) {
+  for (j in 1:nrow(dfIntervalMean)) {
+    if(is.na(dfTemp$steps[i]) & dfTemp$interval[i] == dfIntervalMean$interval[j]) {
+      dfTemp$steps[i] <- dfIntervalMean$avg_steps[j]
+    }
+  }
+}
+
+dfFilledNa <- dfTemp
+```
+### Histogram with NA's Filled
+Now that we have the missing values filled in lets take a look at our new histogram of steps by day to see if they differ from our original dataset.
+```{r}
+ggplot(data=dfFilledNa,aes(x=date,y=steps)) +
+  geom_histogram(stat="identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+### Mean/Median of filled in values
+Lets take a look at the average and median steps per day of our new dataset to see if they differ from the original dataset. First we get the total number of steps by day.
+```{r}
+dfTemp <- sqldf("
+select date
+  ,sum(steps) as total_steps
+from dfFilledNa
+group by 1
+")
+
+head(dfTemp)
+```
+Now that we have the total number of steps by day we can take the mean/median.
+```{r}
+dfAggregateFixed <- sqldf("
+select avg(total_steps) as mean_steps
+  ,median(total_steps) as median_steps
+from dfTemp")
+
+head(dfAggregateFixed)
+```
+We can see the mean and median do not change from the original dataset by any large amount. It is important to note that the variance of the original dtaset will be reduced with more values now corresponding to the average of an interval.
 ## Are there differences in activity patterns between weekdays and weekends?
+### Construct a way to differentiate Weekends from Weekdays
+We first must convert our date column into a POSIXct date type. We are then able to call the weekdays function on this new column, which can then be used to determine weekends vs weeldays.
+```{r}
+dfFilledNa$date_fixed <- as.POSIXct(dfFilledNa$date)
+
+dfFilledNa$weekday <- weekdays(dfFilledNa$date_fixed)
+
+dfFilledNa$weekend_flag <- dfFilledNa$weekday %in% c('Saturday','Sunday')
+
+head(dfFilledNa)
+```
+### Aggregate by weekend vs weekday
+Now that we have data seperated by weekday, we can aggregate theto get the average number of steps by interval/weekend_flag.
+```{r}
+dfTemp <- sqldf("
+select weekend_flag
+  ,interval
+  ,avg(steps) as avg_steps
+from dfFilledNa
+group by 1,2
+")
+
+head(dfTemp)
+```
+
+### Time series plot of weekends vs weekdays for averege steps in an interval
+```{r}
+ggplot(data=dfTemp,aes(x=interval,y=avg_steps,color=weekend_flag)) +
+  geom_line(size=1,alpha=.5)
+```
