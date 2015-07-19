@@ -20,14 +20,9 @@ library(Hmisc)
 ```
 
 ```
-## Warning: package 'Hmisc' was built under R version 3.1.3
-```
-
-```
 ## Loading required package: grid
 ## Loading required package: lattice
 ## Loading required package: survival
-## Loading required package: splines
 ## Loading required package: Formula
 ## 
 ## Attaching package: 'Hmisc'
@@ -39,14 +34,8 @@ library(Hmisc)
 
 ```r
 library(rmarkdown)
-```
 
-```
-## Warning: package 'rmarkdown' was built under R version 3.1.3
-```
-
-```r
-setwd("C:/Users/rcoleman/Documents/GitHub/Coursera/Reproducible-Research/RepData_PeerAssessment1")
+setwd("/Users/richardcoleman/Git/Reproducible-Research/RepData_PeerAssessment1/")
 
 df <- read.csv("activity.csv")
 
@@ -92,12 +81,7 @@ head(dfTemp)
 ## 6 2012-10-06       15420
 ```
 ### Histogram of Total Number of Steps by Day
-
-```
-## Warning: Removed 2304 rows containing missing values (position_stack).
-```
-
-![](PA1_template_files/figure-html/unnamed-chunk-3-1.png) 
+![](PA_template_files/figure-html/unnamed-chunk-3-1.png) 
 ### Mean and Median
 
 ```r
@@ -148,7 +132,7 @@ dfTemp[104,]
 ## 104      835  206.1698
 ```
 ### Time Series Plot of Average Steps by Interval
-![](PA1_template_files/figure-html/unnamed-chunk-7-1.png) 
+![](PA_template_files/figure-html/unnamed-chunk-7-1.png) 
 ## Imputing missing values
 Lets first get some summary statistics on our dataframe to doublecheck our work.
 
@@ -262,7 +246,7 @@ ggplot(data=dfFilledNa,aes(x=date,y=steps)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-12-1.png) 
+![](PA_template_files/figure-html/unnamed-chunk-12-1.png) 
 ### Mean/Median of filled in values
 Lets take a look at the average and median steps per day of our new dataset to see if they differ from the original dataset. First we get the total number of steps by day.
 
@@ -357,4 +341,4 @@ ggplot(data=dfTemp,aes(x=interval,y=avg_steps,color=weekend_flag)) +
   geom_line(size=1,alpha=.5)
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-17-1.png) 
+![](PA_template_files/figure-html/unnamed-chunk-17-1.png) 

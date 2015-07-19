@@ -13,7 +13,7 @@ library(ggplot2)
 library(Hmisc)
 library(rmarkdown)
 
-setwd("C:/Users/rcoleman/Documents/GitHub/Coursera/Reproducible-Research/RepData_PeerAssessment1")
+setwd("/Users/richardcoleman/Git/Reproducible-Research/RepData_PeerAssessment1/")
 
 df <- read.csv("activity.csv")
 
@@ -33,7 +33,7 @@ head(dfTemp)
 ```
 ### Histogram of Total Number of Steps by Day
 ```{r,echo=FALSE}
-ggplot(data=df,aes(x=date,y=steps)) +
+ggplot(data=dfTemp,aes(x=date,y=total_steps)) +
   geom_histogram(stat="identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
